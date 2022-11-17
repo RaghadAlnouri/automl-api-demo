@@ -13,9 +13,11 @@
 // limitations under the License.
 
 // Replace the strings below with your own project & model info
-const project = 'YOUR_PROJECT_NAME';
-const region = 'YOUR_PROJECT_REGION';
-const automl_model = 'YOUR_AUTOML_MODEL_ID';
+const project = 'NLP-course';
+const region = 'us-central1';
+const automl_model = '6854896447276449792';
+
+
 
 const sizeOf = require('image-size');
 const fs = require('fs');
@@ -28,24 +30,55 @@ const automl = require('@google-cloud/automl');
 const predictionClient = new automl.PredictionServiceClient();
 
 // Firebase libraries
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const db = admin.firestore();
 admin.initializeApp(functions.config().firebase);
 
-function resizeImg(filepath) {
-    return new Promise((resolve, reject) => {
-        exec(`convert ${filepath} -resize 600x ${filepath}`, (err) => {
-          if (err) {
-            console.error('Failed to resize image', err);
-            reject(err);
-          } else {
-            console.log('resized image successfully');
-            resolve(filepath);
-          }
-        });
-      });
+global.ticker = function ticker () {
+    console.log("foo Got the ticker called");
+  }
+  
+  process.stdin.on("data", function(input) {
+  
+    // don't forget to call .trim() to remove the \n
+    var fn = input.toString().trim();
+  
+    // function exists
+    if (fn in global && typeof global[fn] === "function") {
+      global[fn]();
+    }
+  
+    // function does not exist
+    else {
+      console.log("could not find " + fn + " function");
+    }
+  });
+  
+process.stdin.resume();
+
+
+// Instantiates a client
+const client = new AutoMlClient();
+
+function deployModelWithNodeCount() {
+  // Construct request
+  const request = {
+    name: client.modelPath(projectId, location, modelId),
+    imageClassificationModelDeploymentMetadata: {
+      nodeCount: 2,
+    },
+  };
+
+  const [operation] = await client.deployModel(request);
+
+  // Wait for operation to complete.
+  const [response] = await operation.promise();
+  console.log(`Model deployment finished. ${response}`);
 }
+
+deployModelWithNodeCount();
 
 function callAutoMLAPI(b64img) {
     return new Promise((resolve, reject) => {
